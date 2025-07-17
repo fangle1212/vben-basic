@@ -10,8 +10,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.10",
-    "@types/mockjs": "^1.0.10",
     "@vueuse/core": "^13.5.0",
     "axios": "^1.10.0",
     "dayjs": "^1.11.13",
@@ -27,6 +25,8 @@
     "vue-router": "4"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.10",
+    "@types/mockjs": "^1.0.10",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.29.0",
