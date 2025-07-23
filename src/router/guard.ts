@@ -48,7 +48,6 @@ function setupCommonGuard(router: Router) {
  */
 function setupAccessGuard(router: Router) {
   router.beforeEach(async (to) => {
-    console.log(to, 'to');
     const userStore = useUserStore();
 
     // 静态路由，这些路由不需要进入权限拦截
