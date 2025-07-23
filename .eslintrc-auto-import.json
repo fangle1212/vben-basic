@@ -1,5 +1,6 @@
 {
   "globals": {
+    "$t": true,
     "Component": true,
     "ComponentPublicInstance": true,
     "ComputedRef": true,
@@ -37,6 +38,8 @@
     "nextTick": true,
     "onActivated": true,
     "onBeforeMount": true,
+    "onBeforeRouteLeave": true,
+    "onBeforeRouteUpdate": true,
     "onBeforeUnmount": true,
     "onBeforeUpdate": true,
     "onDeactivated": true,
@@ -67,7 +70,10 @@
     "useCssModule": true,
     "useCssVars": true,
     "useId": true,
+    "useLink": true,
     "useModel": true,
+    "useRoute": true,
+    "useRouter": true,
     "useSlots": true,
     "useTemplateRef": true,
     "watch": true,

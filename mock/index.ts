@@ -40,17 +40,6 @@ export default [
       };
     },
   },
-  {
-    url: '/auth/codes',
-    method: 'get',
-    response: () => {
-      return {
-        code: 200,
-        data: ['AC_100100', 'AC_100110', 'AC_100120', 'AC_100010'],
-        message: '获取用户信息成功',
-      };
-    },
-  },
   // 获取用户菜单
   {
     url: '/menu/all',
@@ -60,32 +49,21 @@ export default [
         code: 200,
         data: [
           {
+            component: 'BlankLayout',
+            id: 1,
             meta: {
-              order: -1,
               title: 'page.dashboard.title',
             },
-            name: 'Dashboard',
-            path: '/dashboard',
-            redirect: '/analytics',
-            children: [
-              {
-                name: 'Analytics',
-                path: '/analytics',
-                component: '/dashboard/analytics/index',
-                meta: {
-                  affixTab: true,
-                  title: 'page.dashboard.analytics',
-                },
-              },
-              {
-                name: 'Workspace',
-                path: '/workspace',
-                component: '/dashboard/workspace/index',
-                meta: {
-                  title: 'page.dashboard.workspace',
-                },
-              },
-            ],
+            name: 'dashboard',
+            parentId: 0,
+          },
+          {
+            id: 100001,
+            meta: {
+              title: 'page.dashboard.analytics',
+            },
+            name: 'analytics',
+            parentId: 1,
           },
         ],
         message: '获取用户菜单成功',

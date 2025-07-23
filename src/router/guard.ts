@@ -1,12 +1,21 @@
-import type { Router } from 'vue-router';
-
+import type { Router, RouteRecordRaw } from 'vue-router';
 import { LOGIN_PATH, DEFAULT_PATH } from '@/constants';
 import NProgress from 'nprogress';
-import { useAccessStore, useUserStore, useAuthStore } from '@/store';
+import { useUserStore } from '@/store';
+import { noLoginRoutes, rootRoute } from '@/router/routers';
+import type { MenuItem } from '@/types';
+import { flatToTree } from '@/utils';
+import { AuthLayout, BasicLayout, BlankLayout, RouteView } from '@/layouts';
+import type { Recordable } from '@/types';
 
-import { accessRoutes, coreRouteNames } from '@/router/routes';
+const layoutComponents: Recordable<any> = {
+  AuthLayout,
+  BasicLayout,
+  BlankLayout,
+  RouteView,
+};
 
-import { generateAccess } from './access';
+const constantRouterComponents = import.meta.glob('@/pages/**/*.vue');
 
 /**
  * 通用守卫配置
@@ -38,26 +47,16 @@ function setupCommonGuard(router: Router) {
  * @param router
  */
 function setupAccessGuard(router: Router) {
-  router.beforeEach(async (to, from) => {
-    const accessStore = useAccessStore();
+  router.beforeEach(async (to) => {
+    console.log(to, 'to');
     const userStore = useUserStore();
-    const authStore = useAuthStore();
 
-    // 基本路由，这些路由不需要进入权限拦截
-    if (
-      coreRouteNames.includes(to.name as string) &&
-      to.path !== DEFAULT_PATH
-    ) {
-      if (to.path === LOGIN_PATH && accessStore.accessToken) {
-        return decodeURIComponent(
-          (to.query?.redirect as string) || DEFAULT_PATH,
-        );
-      }
+    // 静态路由，这些路由不需要进入权限拦截
+    if (noLoginRoutes.includes(to.path)) {
       return true;
     }
-
     // accessToken 检查
-    if (!accessStore.accessToken) {
+    if (!userStore.token) {
       // 明确声明忽略权限访问权限，则可以访问
       if (to.meta.ignoreAccess) {
         return true;
@@ -67,7 +66,6 @@ function setupAccessGuard(router: Router) {
       if (to.fullPath !== LOGIN_PATH) {
         return {
           path: LOGIN_PATH,
-          // 如不需要，直接删除 query
           query:
             to.fullPath === DEFAULT_PATH
               ? {}
@@ -76,39 +74,24 @@ function setupAccessGuard(router: Router) {
           replace: true,
         };
       }
-      return to;
-    }
-
-    // 是否已经生成过动态路由
-    if (accessStore.isAccessChecked) {
       return true;
     }
+    if (!userStore.userInfo) {
+      await userStore.getUserInfo();
+    }
 
-    // 生成路由表
-    // 当前登录用户拥有的角色标识列表
-    const userInfo = userStore.userInfo || (await authStore.fetchUserInfo());
-    const userRoles = userInfo.roles ?? [];
+    // 如果没有动态路由，则先获取菜单生成路由
+    if (userStore.routers.length === 0) {
+      await userStore.getMenus();
+      // 动态添加路由后，必须用 replace: true 重新进入，才能保证其他路由正常工作
+      return { ...to, replace: true };
+    }
 
-    // 生成菜单和路由
-    const { accessibleMenus, accessibleRoutes } = await generateAccess({
-      roles: userRoles,
-      router,
-      // 则会在菜单中显示，但是访问会被重定向到403
-      routes: accessRoutes,
-    });
+    if (to.path === LOGIN_PATH) {
+      return { path: DEFAULT_PATH, replace: true };
+    }
 
-    console.log(accessibleMenus, accessibleRoutes);
-
-    // 保存菜单信息和路由信息
-    accessStore.setAccessMenus(accessibleMenus);
-    accessStore.setAccessRoutes(accessibleRoutes);
-    accessStore.setIsAccessChecked(true);
-    const redirectPath = (from.query.redirect ??
-      (to.path === DEFAULT_PATH ? DEFAULT_PATH : to.fullPath)) as string;
-    return {
-      ...router.resolve(decodeURIComponent(redirectPath)),
-      replace: true,
-    };
+    return true;
   });
 }
 
@@ -123,4 +106,81 @@ function createRouterGuard(router: Router) {
   setupAccessGuard(router);
 }
 
-export { createRouterGuard };
+/**
+ * 添加动态路由
+ * @param route
+ * @param parentRoute
+ */
+const addDynamicRouters = function (router: Router, routes: MenuItem[]) {
+  const treeRoutes = flatToTree(routes, 0);
+  const dynamicRoutes = formatRouters(treeRoutes as MenuItem[], null);
+  rootRoute.children = dynamicRoutes;
+  rootRoute.redirect = dynamicRoutes[0].path;
+  router.addRoute(rootRoute);
+  console.log(router.getRoutes(), rootRoute);
+  return dynamicRoutes;
+};
+
+/**
+ * 格式化路由
+ * @param routes
+ */
+function formatRouters(
+  treeRoutes: MenuItem[],
+  parent: RouteRecordRaw | null,
+): RouteRecordRaw[] {
+  return treeRoutes.map((item) => {
+    const {
+      component,
+      meta,
+      name,
+      redirect,
+      children = [],
+    } = item as MenuItem & { children?: MenuItem[] };
+    let { path } = item;
+    path = path || `${(parent && parent.path) || ''}/${name}`;
+    const hasChildren = children && children.length;
+    const firstChildPath = hasChildren
+      ? `${path}/${children[0].path || children[0].name}`
+      : '';
+    const route: RouteRecordRaw = {
+      path,
+      redirect: redirect || component in layoutComponents ? firstChildPath : '',
+      name,
+      component:
+        layoutComponents[component] ||
+        constantRouterComponents[
+          `/src/pages/${parent ? String(parent.name) + '/' : ''}${name}/index.vue`
+        ],
+      meta,
+    };
+    if (hasChildren) {
+      route.children = formatRouters(children, route);
+    }
+    return route;
+  });
+}
+
+// /**
+//  * 获取按钮权限
+//  * @param routes
+//  * @param rules
+//  */
+// function findRules(routes: Route[], rules: string[] = []): string[] {
+//   for (const route of routes) {
+//     if (route.auth && Array.isArray(route.auth)) {
+//       rules = rules.concat(route.auth);
+//     }
+//     if (route.children) {
+//       rules = findRules(route.children, rules);
+//     }
+//   }
+//   return rules;
+// }
+
+export {
+  createRouterGuard,
+  addDynamicRouters,
+  formatRouters,
+  // findRules,
+};

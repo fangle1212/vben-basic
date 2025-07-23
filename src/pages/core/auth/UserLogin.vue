@@ -24,15 +24,17 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import type { FormInstance, FormRules } from 'element-plus';
-import { useAuthStore } from '@/store';
+import { useUserStore } from '@/store';
 import type { LoginParams } from '@/api';
+import { DEFAULT_PATH } from '@/constants';
+const router = useRouter();
 
 const LoginFormRef = ref<FormInstance>();
 const rules = reactive<FormRules<typeof formState>>({
   username: [{ required: true, trigger: 'blur' }],
   password: [{ required: true, trigger: 'blur' }],
 });
-const useAuth = useAuthStore();
+const useUser = useUserStore();
 
 interface FormState extends LoginParams {
   remember: number[];
@@ -46,9 +48,15 @@ const formState = reactive<FormState>({
 
 const submitForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return;
-  formEl.validate((valid) => {
+  formEl.validate(async (valid) => {
     if (valid) {
-      useAuth.authLogin(formState);
+      await useUser.authLogin(formState);
+      await router.push(DEFAULT_PATH);
+      ElNotification({
+        title: '登录成功',
+        message: `欢迎回来`,
+        type: 'success',
+      });
     }
   });
 };

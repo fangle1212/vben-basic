@@ -1,5 +1,5 @@
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
-import { useAccessStore } from '@/store';
+import { useUserStore } from '@/store';
 
 let notificationInstance: { close: () => void } | null = null;
 
@@ -52,8 +52,8 @@ const errorHandler = (error: AxiosError) => {
 };
 
 requestInstance.interceptors.request.use((config) => {
-  const useAccess = useAccessStore();
-  const token = useAccess.accessToken;
+  const userStore = useUserStore();
+  const token = userStore.token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

@@ -1,22 +1,68 @@
-<script lang="ts" setup>
-import { usePreferences } from '@/preferences/index';
-
-const { theme } = usePreferences();
-
-console.log(theme);
-</script>
+<script lang="ts" setup></script>
 
 <template>
-  <div class="relative flex min-h-full w-full">
-    <div :class="theme" class="h-full transition-all duration-150"></div>
-    <a-side
-      :class="theme"
-      class="bg-sidebar border-border fixed top-0 left-0 h-full border-r transition-all duration-150"
-    ></a-side>
-    <div
-      class="flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in"
-    >
-      <RouterView />
-    </div>
-  </div>
+  <el-container class="h-screen">
+    <el-header>Header</el-header>
+    <el-container class="overflow-hidden">
+      <el-aside width="200px">
+        <el-menu class="h-full">
+          <el-sub-menu index="1">
+            <template #title>
+              <el-icon><message /></el-icon>Navigator One
+            </template>
+            <el-menu-item-group>
+              <template #title>Group 1</template>
+              <el-menu-item index="1-1">Option 1</el-menu-item>
+              <el-menu-item index="1-2">Option 2</el-menu-item>
+            </el-menu-item-group>
+            <el-menu-item-group title="Group 2">
+              <el-menu-item index="1-3">Option 3</el-menu-item>
+            </el-menu-item-group>
+            <el-sub-menu index="1-4">
+              <template #title>Option4</template>
+              <el-menu-item index="1-4-1">Option 4-1</el-menu-item>
+            </el-sub-menu>
+          </el-sub-menu>
+          <el-sub-menu index="2">
+            <template #title>
+              <el-icon><icon-menu /></el-icon>Navigator Two
+            </template>
+            <el-menu-item-group>
+              <template #title>Group 1</template>
+              <el-menu-item index="2-1">Option 1</el-menu-item>
+              <el-menu-item index="2-2">Option 2</el-menu-item>
+            </el-menu-item-group>
+            <el-menu-item-group title="Group 2">
+              <el-menu-item index="2-3">Option 3</el-menu-item>
+            </el-menu-item-group>
+            <el-sub-menu index="2-4">
+              <template #title>Option 4</template>
+              <el-menu-item index="2-4-1">Option 4-1</el-menu-item>
+            </el-sub-menu>
+          </el-sub-menu>
+          <el-sub-menu index="3">
+            <template #title>
+              <el-icon><setting /></el-icon>Navigator Three
+            </template>
+            <el-menu-item-group>
+              <template #title>Group 1</template>
+              <el-menu-item index="3-1">Option 1</el-menu-item>
+              <el-menu-item index="3-2">Option 2</el-menu-item>
+            </el-menu-item-group>
+            <el-menu-item-group title="Group 2">
+              <el-menu-item index="3-3">Option 3</el-menu-item>
+            </el-menu-item-group>
+            <el-sub-menu index="3-4">
+              <template #title>Option 4</template>
+              <el-menu-item index="3-4-1">Option 4-1</el-menu-item>
+            </el-sub-menu>
+          </el-sub-menu>
+        </el-menu>
+      </el-aside>
+      <el-container>
+        <el-main><RouterView /></el-main>
+        <el-footer>Footer</el-footer>
+      </el-container>
+    </el-container>
+  </el-container>
 </template>

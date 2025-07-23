@@ -1,18 +1,16 @@
-import { createI18n } from 'vue-i18n';
+import { createI18n, type Composer } from 'vue-i18n';
 import type { App } from 'vue';
 import type { Language } from 'element-plus/es/locale';
 import enLocale from 'element-plus/es/locale/lang/en';
 import defaultLocale from 'element-plus/es/locale/lang/zh-cn';
 import type { SupportedLanguagesType } from './typing';
 import { loadLocalesMapFromDir } from './utils';
-import { usePreferences } from '@/preferences/index';
-
-const { locale } = usePreferences();
+import { useSystemStore } from '@/store';
 
 const i18n = createI18n({
   globalInjection: true,
   legacy: false,
-  locale: locale.value,
+  locale: '',
   messages: {},
 });
 
@@ -44,7 +42,7 @@ async function loadThirdPartyMessage(lang: SupportedLanguagesType) {
   await Promise.all([loadElementLocale(lang)]);
 }
 
-const elementLocale = ref<Language>(defaultLocale);
+const elementLocale = ref<Language>();
 
 /**
  * 加载element-plus的语言包
@@ -64,11 +62,14 @@ async function loadElementLocale(lang: SupportedLanguagesType) {
 }
 
 async function setupI18n(app: App) {
-  const loadMessage = await loadMessages(locale.value);
-  i18n.global.setLocaleMessage(locale.value, loadMessage);
+  const systemStore = useSystemStore();
+  const locale = systemStore.lang;
+  const loadMessage = await loadMessages(locale);
+  i18n.global.setLocaleMessage(locale, loadMessage);
+  i18n.global.locale.value = locale;
   app.use(i18n);
 }
 
-const $t = i18n.global.t;
+const $t = i18n.global.t as Composer['t'];
 
 export { $t, elementLocale, setupI18n };
