@@ -5,7 +5,6 @@ import enLocale from 'element-plus/es/locale/lang/en';
 import defaultLocale from 'element-plus/es/locale/lang/zh-cn';
 import type { SupportedLanguagesType } from './typing';
 import { loadLocalesMapFromDir } from './utils';
-import { useSystemStore } from '@/store';
 
 const i18n = createI18n({
   globalInjection: true,
@@ -61,15 +60,27 @@ async function loadElementLocale(lang: SupportedLanguagesType) {
   }
 }
 
-async function setupI18n(app: App) {
-  const systemStore = useSystemStore();
-  const locale = systemStore.lang;
-  const loadMessage = await loadMessages(locale);
-  i18n.global.setLocaleMessage(locale, loadMessage);
-  i18n.global.locale.value = locale;
+function setI18nLanguage(lang: SupportedLanguagesType) {
+  i18n.global.locale.value = lang;
+  document.querySelector('html')?.setAttribute('lang', lang);
+}
+
+async function loadLocaleMessages(lang: SupportedLanguagesType): Promise<void> {
+  if (unref(i18n.global.locale) === lang) {
+    return setI18nLanguage(lang);
+  }
+
+  const loadMessage = await loadMessages(lang);
+  i18n.global.setLocaleMessage(lang, loadMessage);
+
+  return setI18nLanguage(lang);
+}
+
+async function setupI18n(app: App, lang: SupportedLanguagesType) {
+  await loadLocaleMessages(lang);
   app.use(i18n);
 }
 
 const $t = i18n.global.t as Composer['t'];
 
-export { $t, elementLocale, setupI18n };
+export { $t, elementLocale, setupI18n, loadLocaleMessages };
